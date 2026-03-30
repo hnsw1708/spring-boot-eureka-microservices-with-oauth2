@@ -22,13 +22,73 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
         </dependency>
+
+        <!--
+            spring-cloud-starter-netflix-eureka-server already pulls in the Eureka client
+            transitively, so the explicit eureka-client dependency is optional but kept
+            for clarity.  Both are compatible with Spring Cloud 2023.0.x (Spring Boot 3).
+        -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <exclusions>
+                <!--
+                    Exclude the old Jersey 1.x / javax.ws.rs artefacts that are pulled in
+                    transitively by netflix-eureka-client.  They use the legacy javax.*
+                    namespace which conflicts with Spring Boot 3's Jakarta EE 10 baseline.
+                -->
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>jersey-apache-client4</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+            <exclusions>
+                <!--
+                    Same Jersey 1.x / javax.* exclusions for the server artefact so that
+                    no legacy javax.ws.rs classes end up on the classpath.
+                -->
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-servlet</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>jersey-apache-client4</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -36,17 +96,24 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--	Fixes:Error creating bean with name 'eurekaServerContext': Invocation of init method failed; nested exception is java.lang.NoClassDefFoundError: com/sun/jersey/client/apache4/ApacheHttpClient4-->
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-apache-client4</artifactId>
-            <version>${jersey-apache-client4.version}</version>
-        </dependency>
+
+        <!--
+            NOTE: jersey-apache-client4 (com.sun.jersey.contribs) is a Jersey 1.x artefact
+            that relies on javax.ws.rs (the old namespace).  It is NOT compatible with
+            Spring Boot 3 / Jakarta EE 10.  The dependency has therefore been REMOVED and
+            the javax.* transitive pulls have been excluded above.
+
+            Spring Cloud Netflix Eureka 4.x (2023.0.x) no longer requires the old Jersey
+            HTTP client; it uses its own internal HTTP transport instead, so no replacement
+            dependency is needed.
+        -->
+
     </dependencies>
 
 </project>
