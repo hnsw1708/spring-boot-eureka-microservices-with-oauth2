@@ -58,7 +58,7 @@ public class VehiclesController
     @GetMapping("/{id}")
     public Vehicle getVehicle(@PathVariable String id, @AuthenticationPrincipal Jwt jwt)
     {
-        return VEHICLES.get(0);
+        return VEHICLES.getFirst();
     }
 
     // @Secured(value=...) is authority so ROLE_ prefix must be added

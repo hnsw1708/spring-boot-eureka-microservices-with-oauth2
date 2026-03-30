@@ -1,14 +1,16 @@
 package com.iot.demo.api.vehiclesresourceserver.security;
 
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 
-@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+@Configuration
+@EnableMethodSecurity(securedEnabled = true)
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter
 {
@@ -20,18 +22,17 @@ public class WebSecurity extends WebSecurityConfigurerAdapter
         converter.setJwtGrantedAuthoritiesConverter(new IdentityServerRoleConverter());
 
         http
-            .authorizeRequests()
-            .antMatchers(HttpMethod.GET, "/vehicles/all")
-            //.hasAuthority("SCOPE_profile") // Spring appends "SCOPE_" prefix to each scope that it finds
-            .hasRole("iot_developer")// Does not need ROLE_ prefix, but Authority does need ROLE_
-            // .hasAnyRole("iot_developer", "user")
-            .anyRequest().authenticated()
-            .and()
-            .oauth2ResourceServer()
-            .jwt()
-            .jwtAuthenticationConverter(converter);
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(HttpMethod.GET, "/vehicles/all")
+                        //.hasAuthority("SCOPE_profile") // Spring appends "SCOPE_" prefix to each scope that it finds
+                        .hasRole("iot_developer")// Does not need ROLE_ prefix, but Authority does need ROLE_
+                        // .hasAnyRole("iot_developer", "user")
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(server -> server
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(converter)));
 
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
     }
 }
 
