@@ -1,14 +1,16 @@
 package com.iot.demo.api.smarthomesresourceserver.security;
 
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 
-@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+@Configuration
+@EnableMethodSecurity(securedEnabled = true)
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter
 {
@@ -20,17 +22,16 @@ public class WebSecurity extends WebSecurityConfigurerAdapter
         converter.setJwtGrantedAuthoritiesConverter(new IdentityServerRoleConverter());
 
         http
-                .authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/smart-homes/**")
-                .hasAuthority("ROLE_iot_developer")
-                .anyRequest()
-                .authenticated()
-                .and()
-                .oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(converter); // applying JWT Authentication converter
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(HttpMethod.GET, "/smart-homes/**")
+                        .hasAuthority("ROLE_iot_developer")
+                        .anyRequest()
+                        .authenticated())
+                .oauth2ResourceServer(server -> server
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(converter))); // applying JWT Authentication converter
 
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // WARNING! You can not have CORS details on both sides, API Gateway and Resource Server!
         // code below to the end of the class, is an option if we are going around API Gateway,
